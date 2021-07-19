@@ -1,9 +1,9 @@
-
 ##
 # @file TLSserver.py
 # 
 # @brief this file contains packets for the TLS covert channel
 #           intended to run on the server side. 
+
 
 import random
 import socket
@@ -20,6 +20,7 @@ def encodePacket(data):
     """
     tlsHeader = bytes([0x17,0x03,0x01])
     length = len(data)
+    #Encryption Loop
     random.seed(length)
     temp = []
     for d in data:
@@ -34,7 +35,7 @@ def receivePacket(sock):
 
     @param sock  The socket descriptor to read from.
 
-    @return  The raw data recieved from the client, sans header.
+    @return  The raw data received from the client, sans header.
     """
     data = bytearray() 
     headIn = sock.recv(5)
@@ -67,7 +68,7 @@ def run(port):
         sock, addr = sock.accept()
         print("Connected to : {}".format(addr))
         print("Type 'exit' to disconnect.")
-        #Recieve initiallization
+        #Receive initialization
         receivePacket(sock) 
         while True:
             ##The command the user types
@@ -95,7 +96,7 @@ def run(port):
 # Sets this file up to be run by the command line. 
 #
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Program to provide TLS covert channel listiner.',
+    parser = argparse.ArgumentParser(description='Program to provide TLS covert channel listener.',
                                  usage="\n"
                                        "%(prog)s [PORT]"
                                        "\nUse '%(prog)s -h' for more information.")

